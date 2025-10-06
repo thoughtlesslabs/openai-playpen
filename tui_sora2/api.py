@@ -2,25 +2,48 @@
 Sora2 API client module
 """
 import requests
+import logging
+
+# Set up logging to file
+logging.basicConfig(
+    filename='sora_api.log',
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 class Sora2Client:
-    def __init__(self, api_key: str, endpoint: str = "https://api.sora2.com"):
+    def __init__(self, api_key: str, endpoint: str = "https://api.openai.com/v1"):
         self.api_key = api_key
         self.endpoint = endpoint
 
     def create_video(self, script: str, voice: str = None, style: str = None) -> dict:
         """Create a new video with the given parameters."""
-        payload = {"script": script}
+        payload = {"prompt": script, "model": "sora-2"}
         if voice:
             payload["voice"] = voice
         if style:
             payload["style"] = style
+        
+        logging.info(f"Creating video with payload: {payload}")
+        logging.info(f"Endpoint: {self.endpoint}/videos")
+        
         response = requests.post(
             f"{self.endpoint}/videos",
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            },
             json=payload,
         )
+        
+        logging.info(f"Response status: {response.status_code}")
+        logging.info(f"Response body: {response.text}")
+        
+        if response.status_code != 200:
+            logging.error(f"API Error Response: {response.status_code}")
+            logging.error(f"Response Body: {response.text}")
+        
         response.raise_for_status()
         return response.json()
 
@@ -28,7 +51,10 @@ class Sora2Client:
         """Retrieve status for a created video."""
         response = requests.get(
             f"{self.endpoint}/videos/{video_id}",
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            },
         )
         response.raise_for_status()
         return response.json()
