@@ -6,3 +6,5 @@ build/
 dist/
 *.egg-info/
 *.log
+node_modules/
+bun.lockb
